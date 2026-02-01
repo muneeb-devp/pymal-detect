@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Malware Detection System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 30px;
+        }
+
+        .tab {
+            padding: 15px 30px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 1.1em;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .model-info {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .model-info h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .model-info .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card label {
+            display: block;
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-card value {
+            display: block;
+            font-size: 1.5em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .file-upload {
+            border: 2px dashed #667eea;
+            padding: 40px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .file-upload:hover {
+            background: #f5f5ff;
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result.malware {
+            background: #ffe5e5;
+            border: 2px solid #ff4444;
+        }
+
+        .result.goodware {
+            background: #e5ffe5;
+            border: 2px solid #44ff44;
+        }
+
+        .result h3 {
+            margin-bottom: 15px;
+        }
+
+        .result.malware h3 {
+            color: #cc0000;
+        }
+
+        .result.goodware h3 {
+            color: #00cc00;
+        }
+
+        .result-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .confusion-matrix {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            max-width: 400px;
+            margin: 20px 0;
+        }
+
+        .confusion-cell {
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px;
+            background: #f5f5f5;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .demo-button {
+            background: #ffa500;
+            margin-left: 10px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .error {
+            background: #ffe5e5;
+            border: 2px solid #ff4444;
+            color: #cc0000;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🛡️ Malware Detection System</h1>
+            <p>Machine Learning-based Static Malware Detection</p>
+        </header>
+
+        <div class="content">
+            {% if metadata %}
+            <div class="model-info">
+                <h3>Current Model Information</h3>
+                <div class="stats">
+                    <div class="stat-card">
+                        <label>Model</label>
+                        <value>{{ metadata.model_name }}</value>
+                    </div>
+                    <div class="stat-card">
+                        <label>Test AUC</label>
+                        <value>{{ "%.4f"|format(metadata.test_auc) }}</value>
+                    </div>
+                    <div class="stat-card">
+                        <label>Test Accuracy</label>
+                        <value>{{ "%.4f"|format(metadata.test_accuracy) }}</value>
+                    </div>
+                    <div class="stat-card">
+                        <label>Features</label>
+                        <value>{{ metadata.n_features }}</value>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('single')">Single Prediction</button>
+                <button class="tab" onclick="switchTab('batch')">Batch Upload</button>
+            </div>
+
+            <!-- Single Prediction Tab -->
+            <div id="single-tab" class="tab-content active">
+                <h2>Single File Analysis</h2>
+                <p style="margin-bottom: 20px;">Enter the PE file features manually or load demo data.</p>
+
+                <button class="demo-button" onclick="loadDemoData()">Load Demo Malware Data</button>
+
+                <form id="single-form" style="margin-top: 20px;">
+                    <div class="features-grid">
+                        {% if feature_columns %}
+                        {% for feature in feature_columns %}
+                        <div class="form-group">
+                            <label for="{{ feature }}">{{ feature }}</label>
+                            <input type="number" id="{{ feature }}" name="{{ feature }}" step="any" required>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" style="margin-top: 20px;">Analyze File</button>
+                </form>
+
+                <div class="loading" id="single-loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing...</p>
+                </div>
+
+                <div class="error" id="single-error"></div>
+
+                <div class="result" id="single-result">
+                    <h3 id="single-result-title"></h3>
+                    <div class="result-details">
+                        <div>
+                            <strong>Prediction:</strong> <span id="prediction-label"></span>
+                        </div>
+                        <div>
+                            <strong>Confidence:</strong> <span id="confidence"></span>
+                        </div>
+                        <div>
+                            <strong>Malware Probability:</strong> <span id="malware-prob"></span>
+                        </div>
+                        <div>
+                            <strong>Goodware Probability:</strong> <span id="goodware-prob"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Batch Upload Tab -->
+            <div id="batch-tab" class="tab-content">
+                <h2>Batch File Analysis</h2>
+                <p style="margin-bottom: 20px;">Upload a CSV file with multiple samples. If the file contains a 'Label'
+                    column, evaluation metrics will be displayed.</p>
+
+                <div class="file-upload" onclick="document.getElementById('batch-file').click()">
+                    <input type="file" id="batch-file" accept=".csv" onchange="handleBatchUpload(this)">
+                    <p>📁 Click to upload CSV file</p>
+                    <p style="font-size: 0.9em; color: #666; margin-top: 10px;">or drag and drop</p>
+                </div>
+
+                <div class="loading" id="batch-loading">
+                    <div class="spinner"></div>
+                    <p>Processing batch...</p>
+                </div>
+
+                <div class="error" id="batch-error"></div>
+
+                <div class="result" id="batch-result">
+                    <h3>Batch Analysis Results</h3>
+                    <div class="result-details">
+                        <div>
+                            <strong>Total Samples:</strong> <span id="batch-total"></span>
+                        </div>
+                        <div>
+                            <strong>Malware Detected:</strong> <span id="batch-malware"></span>
+                        </div>
+                        <div>
+                            <strong>Goodware:</strong> <span id="batch-goodware"></span>
+                        </div>
+                        <div>
+                            <strong>Malware %:</strong> <span id="batch-percent"></span>
+                        </div>
+                    </div>
+
+                    <div id="batch-evaluation" style="margin-top: 30px; display: none;">
+                        <h3>Evaluation Metrics</h3>
+                        <div class="result-details">
+                            <div>
+                                <strong>AUC:</strong> <span id="eval-auc"></span>
+                            </div>
+                            <div>
+                                <strong>Accuracy:</strong> <span id="eval-accuracy"></span>
+                            </div>
+                        </div>
+
+                        <h4 style="margin-top: 20px;">Confusion Matrix</h4>
+                        <div class="confusion-matrix">
+                            <div class="confusion-cell">
+                                <strong>True Negatives</strong><br>
+                                <span id="tn" style="font-size: 1.5em; color: #00cc00;"></span>
+                            </div>
+                            <div class="confusion-cell">
+                                <strong>False Positives</strong><br>
+                                <span id="fp" style="font-size: 1.5em; color: #ff4444;"></span>
+                            </div>
+                            <div class="confusion-cell">
+                                <strong>False Negatives</strong><br>
+                                <span id="fn" style="font-size: 1.5em; color: #ff4444;"></span>
+                            </div>
+                            <div class="confusion-cell">
+                                <strong>True Positives</strong><br>
+                                <span id="tp" style="font-size: 1.5em; color: #00cc00;"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+
+        // Load demo malware data
+        function loadDemoData() {
+            const demoData = {
+                BaseOfCode: 4096,
+                BaseOfData: 69632,
+                Characteristics: 258,
+                DllCharacteristics: 0,
+                Entropy: 7.9876,
+                FileAlignment: 512,
+                ImageBase: 4194304,
+                Machine: 332,
+                Magic: 267,
+                NumberOfRvaAndSizes: 16,
+                NumberOfSections: 3,
+                NumberOfSymbols: 0,
+                PE_TYPE: 32,
+                PointerToSymbolTable: 0,
+                Size: 57344,
+                SizeOfCode: 45056,
+                SizeOfHeaders: 1024,
+                SizeOfImage: 73728,
+                SizeOfInitializedData: 11776,
+                SizeOfOptionalHeader: 224,
+                SizeOfUninitializedData: 1500,
+                TimeDateStamp: 12345
+            };
+
+            for (const [key, value] of Object.entries(demoData)) {
+                const input = document.getElementById(key);
+                if (input) {
+                    input.value = value;
+                }
+            }
+        }
+
+        // Single prediction form submission
+        document.getElementById('single-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const data = {};
+
+            formData.forEach((value, key) => {
+                data[key] = parseFloat(value);
+            });
+
+            document.getElementById('single-loading').classList.add('show');
+            document.getElementById('single-result').classList.remove('show');
+            document.getElementById('single-error').classList.remove('show');
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Prediction failed');
+                }
+
+                // Display results
+                const resultDiv = document.getElementById('single-result');
+                resultDiv.classList.remove('malware', 'goodware');
+                resultDiv.classList.add(result.prediction === 1 ? 'malware' : 'goodware');
+                resultDiv.classList.add('show');
+
+                document.getElementById('single-result-title').textContent =
+                    result.prediction === 1 ? '⚠️ MALWARE DETECTED!' : '✅ GOODWARE - Safe';
+                document.getElementById('prediction-label').textContent = result.prediction_label;
+                document.getElementById('confidence').textContent = (result.confidence * 100).toFixed(2) + '%';
+                document.getElementById('malware-prob').textContent = (result.probability.malware * 100).toFixed(2) + '%';
+                document.getElementById('goodware-prob').textContent = (result.probability.goodware * 100).toFixed(2) + '%';
+
+            } catch (error) {
+                document.getElementById('single-error').textContent = 'Error: ' + error.message;
+                document.getElementById('single-error').classList.add('show');
+            } finally {
+                document.getElementById('single-loading').classList.remove('show');
+            }
+        });
+
+        // Batch file upload
+        async function handleBatchUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            document.getElementById('batch-loading').classList.add('show');
+            document.getElementById('batch-result').classList.remove('show');
+            document.getElementById('batch-error').classList.remove('show');
+
+            try {
+                const response = await fetch('/predict_batch', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Batch prediction failed');
+                }
+
+                // Display results
+                document.getElementById('batch-result').classList.add('show');
+                document.getElementById('batch-total').textContent = result.num_samples;
+                document.getElementById('batch-malware').textContent = result.summary.num_malware;
+                document.getElementById('batch-goodware').textContent = result.summary.num_goodware;
+                document.getElementById('batch-percent').textContent = result.summary.percent_malware.toFixed(2) + '%';
+
+                // Display evaluation metrics if available
+                if (result.evaluation) {
+                    document.getElementById('batch-evaluation').style.display = 'block';
+                    document.getElementById('eval-auc').textContent = result.evaluation.auc.toFixed(4);
+                    document.getElementById('eval-accuracy').textContent = (result.evaluation.accuracy * 100).toFixed(2) + '%';
+                    document.getElementById('tn').textContent = result.evaluation.true_negatives;
+                    document.getElementById('fp').textContent = result.evaluation.false_positives;
+                    document.getElementById('fn').textContent = result.evaluation.false_negatives;
+                    document.getElementById('tp').textContent = result.evaluation.true_positives;
+                } else {
+                    document.getElementById('batch-evaluation').style.display = 'none';
+                }
+
+            } catch (error) {
+                document.getElementById('batch-error').textContent = 'Error: ' + error.message;
+                document.getElementById('batch-error').classList.add('show');
+            } finally {
+                document.getElementById('batch-loading').classList.remove('show');
+            }
+        }
+    </script>
+</body>
+
+</html>

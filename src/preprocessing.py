@@ -31,10 +31,11 @@ class MalwarePreprocessor:
             df = df.drop('Identify', axis=1)
         
         # Fill any remaining missing numeric values with median
+        # Use pandas 3.0 compatible approach (no chained assignment)
         numeric_columns = df.select_dtypes(include=[np.number]).columns
         for col in numeric_columns:
             if df[col].isnull().any():
-                df[col].fillna(df[col].median(), inplace=True)
+                df.loc[:, col] = df[col].fillna(df[col].median())
         
         return df
     

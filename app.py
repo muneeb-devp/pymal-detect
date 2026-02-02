@@ -30,9 +30,36 @@ metadata = None
 feature_columns = None
 
 
+def train_model_if_missing():
+    """Train model if it doesn't exist (for deployment)"""
+    if not os.path.exists(MODEL_PATH) or not os.path.exists(PREPROCESSOR_PATH):
+        print("Model files not found. Training model for deployment...")
+        try:
+            import subprocess
+            result = subprocess.run(
+                ['python', 'train_for_deployment.py'],
+                check=True,
+                capture_output=True,
+                text=True
+            )
+            print(result.stdout)
+            print("Model training completed successfully!")
+        except subprocess.CalledProcessError as e:
+            print(f"Error training model: {e}")
+            print(f"stdout: {e.stdout}")
+            print(f"stderr: {e.stderr}")
+            raise
+        except Exception as e:
+            print(f"Unexpected error during model training: {e}")
+            raise
+
+
 def load_model_artifacts():
     """Load model, preprocessor, and metadata"""
     global model, preprocessor, metadata, feature_columns
+    
+    # Train model if missing (important for deployment)
+    train_model_if_missing()
     
     try:
         model = joblib.load(MODEL_PATH)

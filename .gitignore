@@ -44,10 +44,13 @@ brazilian-malware-dataset-master/
 *.csv
 !data/sample.csv
 
-# Model files (too large for git)
-models/*.pkl
-models/*.pth
-models/*.h5
+# Model files - IMPORTANT: Uncomment to allow models in git for deployment
+# If your models are small enough (<100MB), commit them for Render deployment
+# Otherwise, train during deployment or use external storage
+# models/*.pkl
+# models/*.pth
+# models/*.h5
+models/*.json  # Keep JSON files (they're small)
 
 # Keep model metadata
 !models/model_metadata.json

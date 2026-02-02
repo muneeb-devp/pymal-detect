@@ -58,7 +58,6 @@ def load_model_artifacts():
     """Load model, preprocessor, and metadata"""
     global model, preprocessor, metadata, feature_columns
     
-    # Train model if missing (important for deployment)
     train_model_if_missing()
     
     try:

@@ -69,3 +69,4 @@ temp/
 # Environment variables
 .env
 .env.local
+catboost_info/

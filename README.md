@@ -2,7 +2,13 @@
 
 A comprehensive machine learning-based static malware detection system that classifies Windows PE executables as malware or goodware. This project includes model training, web application deployment, automated testing, and CI/CD pipeline.
 
-## 🎯 Project Overview
+## � Live Demo
+
+**Production URL:** [https://malware-detector-py-ypso2qakrq-uc.a.run.app/](https://malware-detector-py-ypso2qakrq-uc.a.run.app/)
+
+Try the live application to analyze PE files for malware detection!
+
+## �🎯 Project Overview
 
 This system performs **static malware detection** by analyzing features extracted from Windows Portable Executable (PE) files without executing them. The project demonstrates the complete ML pipeline from data preprocessing to production deployment.
 

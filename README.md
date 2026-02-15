@@ -5,7 +5,7 @@ A comprehensive machine learning-based static malware detection system that clas
 ## � Live Demo
 
 **Production URL:** [https://malware-detector-py-ypso2qakrq-uc.a.run.app/](https://malware-detector-py-ypso2qakrq-uc.a.run.app/)
-
+**Deployed on:** Google Cloud Run (us-central1)
 Try the live application to analyze PE files for malware detection!
 
 ## �🎯 Project Overview
@@ -42,16 +42,29 @@ pyMalDetect/
 │   └── test_api.py            # Integration tests for API
 ├── templates/
 │   └── index.html             # Web interface
-├── models/                    # Saved models (generated after training)
-├── results/                   # Training results (generated after training)
-├── data/                      # Test set (generated after training)
+├── models/                    # Saved models (334KB LightGBM)
+│   ├── production_model.pkl
+│   ├── preprocessor.pkl
+│   └── model_metadata.json
+├── results/                   # Training results
+│   ├── cv_results.json
+│   └── test_results.json
+├── data/                      # Test set
+│   └── test_set.csv
 ├── .github/
 │   └── workflows/
-│       └── ci-cd.yml          # CI/CD pipeline configuration
+│       └── ci-cd.yml          # CI/CD pipeline (Google Cloud Run)
 ├── app.py                     # Flask web application
 ├── train.py                   # Main training script
-├── requirements.txt           # Python dependencies
-├── Procfile                   # Deployment configuration
+├── train_for_deployment.py    # Training script for production
+├── requirements.txt           # Development dependencies
+├── requirements-production.txt # Production dependencies (minimal)
+├── Dockerfile                 # Container configuration
+├── deployed.md                # Deployment details and URL
+├── evaluation-and-design.md   # Model evaluation and design decisions
+├── ai-tooling.md              # AI tools usage report
+├── CI-CD-SETUP.md             # CI/CD configuration guide
+├── SUBMISSION-CHECKLIST.md    # Project submission checklist
 └── README.md                  # This file
 ```
 
@@ -59,7 +72,7 @@ pyMalDetect/
 
 ### Prerequisites
 
-- Python 3.9+
+- Python 3.11+
 - pip
 - Virtual environment (recommended)
 - Git
@@ -178,20 +191,24 @@ pytest tests/ --cov=src --cov-report=html
 The project includes a GitHub Actions workflow that:
 
 1. **On Pull Request or Push to Main:**
-    - Sets up Python environment
+    - Sets up Python 3.13 environment
     - Installs dependencies
     - Runs all tests
     - Validates code imports
 
 2. **On Push to Main (after tests pass):**
-    - Triggers deployment to cloud platform
-    - Performs health check
+    - Authenticates with Google Cloud
+    - Builds Docker container using Cloud Build
+    - Deploys to Google Cloud Run
+    - Performs automated health check
 
 ### Setup CI/CD
 
 1. Add GitHub Secrets:
-    - `RENDER_DEPLOY_HOOK` - Webhook URL from Render
-    - `RENDER_APP_URL` - Deployed application URL
+    - `GCP_SA_KEY` - Google Cloud Service Account JSON key
+    - `GCP_PROJECT_ID` - Your Google Cloud Project ID
+
+2. See [CI-CD-SETUP.md](CI-CD-SETUP.md) for detailed configuration instructions
 
 ## 📈 Model Performance
 
@@ -215,24 +232,49 @@ All models are evaluated using:
 
 ## 🚢 Deployment
 
-### Deploy to Render
+### Current Deployment: Google Cloud Run
 
-1. Create a new Web Service on [Render](https://render.com)
-2. Connect your GitHub repository
-3. Configure build settings:
-    - **Build Command**: `pip install -r requirements.txt`
-    - **Start Command**: `gunicorn app:app`
-4. Add environment variables if needed
-5. Deploy!
+The application is deployed using Docker containers on Google Cloud Run:
+
+**Features:**
+- Automatic scaling (0 to multiple instances)
+- Pay-per-use pricing
+- HTTPS by default
+- Global CDN
+- 1GB RAM, 300s timeout
+
+**Deployment Process:**
+
+1. Code pushed to `main` branch triggers GitHub Actions
+2. Docker image built using Cloud Build
+3. Image pushed to Artifact Registry
+4. Service deployed to Cloud Run
+5. Automated health check performed
+
+### Manual Deployment
+
+```bash
+# Authenticate
+gcloud auth login
+
+# Deploy
+gcloud run deploy malware-detector-py \
+  --source . \
+  --platform managed \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --memory 1Gi
+```
 
 ### Deploy to Other Platforms
 
 The app is compatible with:
 
+- **Google Cloud Run** ✅ (Current)
 - Heroku
 - Railway
-- Google Cloud Run
-- AWS Elastic Beanstalk
+- AWS App Runner
+- Azure Container Apps
 
 ## 🛠️ Development
 
@@ -256,13 +298,13 @@ The app is compatible with:
 
 ## 📝 AI Tool Usage
 
-This project was developed with assistance from AI code generation tools including:
+This project was developed with assistance from AI code generation tools:
 
-- GitHub Copilot for code completion and suggestions
-- AI-assisted debugging and optimization
-- Documentation generation assistance
+- **GitHub Copilot**: Code completion and suggestions
+- **Claude (Anthropic)**: Architecture decisions, debugging, deployment troubleshooting
+- **AI-assisted tasks**: Documentation, test generation, CI/CD configuration
 
-The AI tools significantly accelerated development while maintaining code quality through manual review and testing.
+The AI tools provided an estimated **5x productivity boost** while maintaining code quality through manual review and testing. See [ai-tooling.md](ai-tooling.md) for detailed usage report.
 
 ## 🔬 Technical Details
 
@@ -291,6 +333,14 @@ The AI tools significantly accelerated development while maintaining code qualit
 
 This project is for educational purposes.
 
+## 📚 Additional Documentation
+
+- **[deployed.md](deployed.md)** - Production deployment details and API endpoints
+- **[evaluation-and-design.md](evaluation-and-design.md)** - Comprehensive model evaluation with cross-validation results, test metrics, and design decisions
+- **[ai-tooling.md](ai-tooling.md)** - Detailed report on AI tools usage, productivity impact, and best practices
+- **[CI-CD-SETUP.md](CI-CD-SETUP.md)** - Step-by-step guide for configuring GitHub Actions with Google Cloud
+- **[SUBMISSION-CHECKLIST.md](SUBMISSION-CHECKLIST.md)** - Project submission requirements and status
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please:
@@ -306,4 +356,4 @@ For questions or feedback, please open an issue on GitHub.
 
 ---
 
-**Note**: Model files are not included in the repository due to size. Run `python train.py` to generate them locally.
+**Note**: Model files (334KB) are included in the repository for deployment convenience. Run `python train.py` to retrain models if needed.

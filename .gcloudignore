@@ -1,10 +1,8 @@
 # Google Cloud ignore file - reduces deployment size
 # Similar to .dockerignore
 
-# Dataset
+# Dataset (keep data/test_set.csv)
 brazilian-malware-dataset-master/
-*.csv
-!data/test_set.csv
 
 # Training scripts
 train.py

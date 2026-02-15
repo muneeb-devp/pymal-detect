@@ -76,7 +76,7 @@ jobs:
                     --allow-unauthenticated \
                     --memory 1Gi \
                     --timeout 300 \
-                    --quiet
+                    --verbosity=debug
 
             - name: Get Service URL
               id: url

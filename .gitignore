@@ -71,3 +71,4 @@ temp/
 .env.local
 catboost_info/
 # CI/CD configured Sun Feb 15 06:15:55 EST 2026
+# Fix Artifact Registry permissions Sun Feb 15 06:23:04 EST 2026

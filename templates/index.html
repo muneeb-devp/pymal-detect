@@ -342,7 +342,7 @@
 
                 <button class="demo-button" onclick="loadDemoData()">Load Demo Malware Data</button>
 
-                <form id="single-form" style="margin-top: 20px;">
+                <form id="single-form" style="margin-top: 20px;" onsubmit="return false;">
                     <div class="features-grid">
                         {% if feature_columns %}
                         {% for feature in feature_columns %}
@@ -456,6 +456,30 @@
     </div>
 
     <script>
+        // Check model health on page load
+        async function checkModelHealth() {
+            try {
+                const response = await fetch('/health');
+                const health = await response.json();
+                
+                if (!health.model_loaded) {
+                    console.error('Model not loaded:', health);
+                    console.error('Errors:', health.errors);
+                    // Show warning in UI
+                    const warning = document.createElement('div');
+                    warning.style.cssText = 'position: fixed; top: 10px; right: 10px; background: #ff4444; color: white; padding: 15px; border-radius: 5px; z-index: 10000;';
+                    warning.innerHTML = '⚠️ Model not loaded! Check console for details.';
+                    document.body.appendChild(warning);
+                    setTimeout(() => warning.remove(), 5000);
+                }
+            } catch (error) {
+                console.error('Health check failed:', error);
+            }
+        }
+
+        // Run health check when page loads
+        window.addEventListener('DOMContentLoaded', checkModelHealth);
+
         // Tab switching
         function switchTab(tabName) {
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
@@ -503,14 +527,17 @@
         // Single prediction form submission
         document.getElementById('single-form').addEventListener('submit', async function (e) {
             e.preventDefault();
+            e.stopPropagation();
 
             const formData = new FormData(e.target);
             const data = {};
 
+            // Collect form data
             formData.forEach((value, key) => {
                 data[key] = parseFloat(value);
             });
 
+            // Show loading state
             document.getElementById('single-loading').classList.add('show');
             document.getElementById('single-result').classList.remove('show');
             document.getElementById('single-error').classList.remove('show');
@@ -524,10 +551,13 @@
                     body: JSON.stringify(data)
                 });
 
+                // Hide loading
+                document.getElementById('single-loading').classList.remove('show');
+
                 const result = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(result.error || 'Prediction failed');
+                    throw new Error(result.error || `Server error: ${response.status} ${response.statusText}`);
                 }
 
                 // Display results

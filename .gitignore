@@ -43,6 +43,7 @@ env/
 brazilian-malware-dataset-master/
 *.csv
 !data/sample.csv
+!data/test_set.csv
 
 # Model files - Models are small (334KB), so we commit them for deployment
 # This avoids training on every deploy

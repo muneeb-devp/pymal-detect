@@ -1,0 +1,66 @@
+# Exclude unnecessary files from Docker build
+# But KEEP model files (they're essential!)
+
+# Dataset (too large, not needed for inference)
+brazilian-malware-dataset-master/
+*.csv
+!data/test_set.csv
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Training scripts (not needed in production)
+train.py
+train_simple.py
+explore_data.py
+eval.py
+
+# Tests
+tests/
+pytest.ini
+
+# Results
+results/
+catboost_info/
+
+# Documentation (keep deployment docs for reference)
+README.md
+*.md
+!DEPLOYMENT*.md
+
+# Development configs
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# IMPORTANT: Do NOT exclude models/ directory!
+# We need the trained models for inference

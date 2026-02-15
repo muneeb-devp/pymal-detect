@@ -1,0 +1,55 @@
+# Google Cloud ignore file - reduces deployment size
+# Similar to .dockerignore
+
+# Dataset
+brazilian-malware-dataset-master/
+*.csv
+!data/test_set.csv
+
+# Training scripts
+train.py
+train_simple.py
+explore_data.py
+eval.py
+
+# Tests
+tests/
+pytest.ini
+
+# Results
+results/
+catboost_info/
+
+# Development dependencies
+requirements.txt
+
+# Git
+.git/
+.gitignore
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Documentation
+README.md
+BEFORE_AFTER.md
+
+# IMPORTANT: Include models directory!
+# Models are essential for inference
+!models/
+!models/*.pkl
+!models/*.json

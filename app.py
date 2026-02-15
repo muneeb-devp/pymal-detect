@@ -14,6 +14,8 @@ from flask_cors import CORS
 import joblib
 from sklearn.metrics import roc_auc_score, accuracy_score, confusion_matrix
 import io
+import traceback
+import sys
 
 app = Flask(__name__)
 CORS(app)
@@ -28,6 +30,7 @@ model = None
 preprocessor = None
 metadata = None
 feature_columns = None
+load_errors = []  # Store any loading errors for debugging
 
 
 def train_model_if_missing():
@@ -56,33 +59,74 @@ def train_model_if_missing():
 
 def load_model_artifacts():
     """Load model, preprocessor, and metadata"""
-    global model, preprocessor, metadata, feature_columns
+    global model, preprocessor, metadata, feature_columns, load_errors
+    
+    print("="*80)
+    print("Starting model artifact loading...")
+    print(f"Python version: {sys.version}")
+    print(f"Current directory: {os.getcwd()}")
+    print(f"Directory contents: {os.listdir('.')}")
+    
+    # Check if models directory exists
+    if os.path.exists('models'):
+        print(f"Models directory contents: {os.listdir('models')}")
+    else:
+        error_msg = "Models directory does not exist!"
+        print(error_msg)
+        load_errors.append(error_msg)
+        return
     
     train_model_if_missing()
     
+    # Load model
     try:
+        print(f"Loading model from {MODEL_PATH}...")
+        print(f"Model file exists: {os.path.exists(MODEL_PATH)}")
+        print(f"Model file size: {os.path.getsize(MODEL_PATH) if os.path.exists(MODEL_PATH) else 'N/A'} bytes")
         model = joblib.load(MODEL_PATH)
-        print(f"Model loaded from {MODEL_PATH}")
+        print(f"✓ Model loaded successfully from {MODEL_PATH}")
+        print(f"Model type: {type(model)}")
     except Exception as e:
-        print(f"Error loading model: {e}")
+        error_msg = f"Error loading model: {str(e)}\n{traceback.format_exc()}"
+        print(error_msg)
+        load_errors.append(error_msg)
         model = None
     
+    # Load preprocessor
     try:
+        print(f"Loading preprocessor from {PREPROCESSOR_PATH}...")
+        print(f"Preprocessor file exists: {os.path.exists(PREPROCESSOR_PATH)}")
         from src.preprocessing import MalwarePreprocessor
         preprocessor = MalwarePreprocessor.load_preprocessor(PREPROCESSOR_PATH)
         feature_columns = preprocessor.feature_columns
-        print(f"Preprocessor loaded from {PREPROCESSOR_PATH}")
+        print(f"✓ Preprocessor loaded successfully from {PREPROCESSOR_PATH}")
+        print(f"Number of features: {len(feature_columns) if feature_columns else 0}")
     except Exception as e:
-        print(f"Error loading preprocessor: {e}")
+        error_msg = f"Error loading preprocessor: {str(e)}\n{traceback.format_exc()}"
+        print(error_msg)
+        load_errors.append(error_msg)
         preprocessor = None
     
+    # Load metadata
     try:
+        print(f"Loading metadata from {METADATA_PATH}...")
+        print(f"Metadata file exists: {os.path.exists(METADATA_PATH)}")
         with open(METADATA_PATH, 'r') as f:
             metadata = json.load(f)
-        print(f"Metadata loaded from {METADATA_PATH}")
+        print(f"✓ Metadata loaded successfully from {METADATA_PATH}")
     except Exception as e:
-        print(f"Error loading metadata: {e}")
+        error_msg = f"Error loading metadata: {str(e)}\n{traceback.format_exc()}"
+        print(error_msg)
+        load_errors.append(error_msg)
         metadata = None
+    
+    print("="*80)
+    print(f"Model loading complete. Status:")
+    print(f"  Model: {'✓ Loaded' if model is not None else '✗ Failed'}")
+    print(f"  Preprocessor: {'✓ Loaded' if preprocessor is not None else '✗ Failed'}")
+    print(f"  Metadata: {'✓ Loaded' if metadata is not None else '✗ Failed'}")
+    print(f"  Errors: {len(load_errors)}")
+    print("="*80)
 
 
 # Load artifacts at startup
@@ -104,9 +148,40 @@ def health():
         'status': 'healthy' if model is not None else 'unhealthy',
         'model_loaded': model is not None,
         'preprocessor_loaded': preprocessor is not None,
-        'metadata_loaded': metadata is not None
+        'metadata_loaded': metadata is not None,
+        'feature_count': len(feature_columns) if feature_columns else 0,
+        'errors': load_errors if load_errors else []
     }
     return jsonify(status), 200 if status['status'] == 'healthy' else 503
+
+
+@app.route('/debug')
+def debug():
+    """Debug endpoint to see detailed system information"""
+    import platform
+    try:
+        debug_info = {
+            'python_version': sys.version,
+            'platform': platform.platform(),
+            'cwd': os.getcwd(),
+            'files_in_cwd': os.listdir('.'),
+            'models_dir_exists': os.path.exists('models'),
+            'models_dir_contents': os.listdir('models') if os.path.exists('models') else [],
+            'model_file_exists': os.path.exists(MODEL_PATH),
+            'model_file_size': os.path.getsize(MODEL_PATH) if os.path.exists(MODEL_PATH) else None,
+            'preprocessor_file_exists': os.path.exists(PREPROCESSOR_PATH),
+            'preprocessor_file_size': os.path.getsize(PREPROCESSOR_PATH) if os.path.exists(PREPROCESSOR_PATH) else None,
+            'model_loaded': model is not None,
+            'preprocessor_loaded': preprocessor is not None,
+            'metadata_loaded': metadata is not None,
+            'feature_columns': feature_columns,
+            'load_errors': load_errors,
+            'src_dir_exists': os.path.exists('src'),
+            'src_dir_contents': os.listdir('src') if os.path.exists('src') else []
+        }
+        return jsonify(debug_info), 200
+    except Exception as e:
+        return jsonify({'error': str(e), 'traceback': traceback.format_exc()}), 500
 
 
 @app.route('/predict', methods=['POST'])

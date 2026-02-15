@@ -1,0 +1,17 @@
+# Render Blueprint for Malware Detection App
+# This configuration uses the lightweight production requirements
+
+services:
+    - type: web
+      name: malware-detection-app
+      env: python
+      region: oregon
+      plan: free
+      buildCommand: pip install -r requirements-production.txt
+      startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --timeout 120
+      envVars:
+          - key: PYTHON_VERSION
+            value: 3.11.0
+          - key: PORT
+            generateValue: true
+      healthCheckPath: /health

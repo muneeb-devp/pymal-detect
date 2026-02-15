@@ -1,0 +1,25 @@
+# Files to exclude from deployment slug (Render/Railway/Heroku)
+# This reduces the deployment size
+
+# Dataset
+brazilian-malware-dataset-master/
+*.csv
+
+# Training scripts (not needed in production)
+train.py
+train_simple.py
+explore_data.py
+eval.py
+
+# Test files
+tests/
+pytest.ini
+
+# Results and artifacts
+results/
+catboost_info/
+
+# Development files
+README.md
+build.sh
+*.md
